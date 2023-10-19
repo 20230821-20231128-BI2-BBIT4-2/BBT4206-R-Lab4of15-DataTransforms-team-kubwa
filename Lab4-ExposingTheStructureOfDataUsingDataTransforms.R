@@ -280,7 +280,7 @@ model_of_the_transform <- preProcess(BostonHousing, method = c("scale"))
 print(model_of_the_transform)
 boston_housing_scale_transform <- predict(model_of_the_transform,
                                           BostonHousing)
-# AFTER
+# AFTER comment
 summary(boston_housing_scale_transform)
 hist(boston_housing_scale_transform[, 1],
      main = names(boston_housing_scale_transform)[1])
