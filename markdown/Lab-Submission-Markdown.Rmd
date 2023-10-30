@@ -1,0 +1,719 @@
+---
+title: "Business Intelligence Lab Submission Markdown"
+author: "<Specify your group name here>"
+date: "<Specify the date when you submitted the lab>"
+output:
+  github_document: 
+    toc: yes
+    toc_depth: 4
+    fig_width: 6
+    fig_height: 4
+    df_print: default
+editor_options:
+  chunk_output_type: console
+---
+
+# Student Details
+
++---------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Student ID Numbers and Names of Group Members** | *\<list one student name, class group (just the letter; A, B, or C), and ID per line, e.g., 123456 - A - John Leposo; you should be between 2 and 5 members per group\>* |
+|                                                   |                                                                                                                                                                          |
+|                                                   | 1.  ID - Class Group - Name                                                                                                                                              |
+|                                                   |                                                                                                                                                                          |
+|                                                   | 2.  ID - Class Group - Name                                                                                                                                              |
+|                                                   |                                                                                                                                                                          |
+|                                                   | 3.  ID - Class Group - Name                                                                                                                                              |
+|                                                   |                                                                                                                                                                          |
+|                                                   | 4.  ID - Class Group - Name                                                                                                                                              |
+|                                                   |                                                                                                                                                                          |
+|                                                   | 5.  ID - Class Group - Name                                                                                                                                              |
++---------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **GitHub Classroom Group Name**                   | *\<specify the name of the team you created on GitHub classroom\>*                                                                                                       |
++---------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Course Code**                                   | BBT4206                                                                                                                                                                  |
++---------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Course Name**                                   | Business Intelligence II                                                                                                                                                 |
++---------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Program**                                       | Bachelor of Business Information Technology                                                                                                                              |
++---------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Semester Duration**                             | 21^st^ August 2023 to 28^th^ November 2023                                                                                                                               |
++---------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+# Setup Chunk
+
+We start by installing all the required packages
+
+```{r Install Packages, echo=TRUE, message=FALSE, warning=FALSE}
+## formatR - Required to format R code in the markdown ----
+if (!is.element("formatR", installed.packages()[, 1])) {
+  install.packages("formatR", dependencies = TRUE,
+                   repos="https://cloud.r-project.org")
+}
+require("formatR")
+
+
+## readr - Load datasets from CSV files ----
+if (!is.element("readr", installed.packages()[, 1])) {
+  install.packages("readr", dependencies = TRUE,
+                   repos="https://cloud.r-project.org")
+}
+require("readr")
+
+if (require("languageserver")) {
+  require("languageserver")
+} else {
+  install.packages("languageserver", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+if (require("mlbench")) {
+  require("mlbench")
+} else {
+  install.packages("mlbench", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+## readr ----
+if (require("readr")) {
+  require("readr")
+} else {
+  install.packages("readr", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+## caret ----
+if (require("caret")) {
+  require("caret")
+} else {
+  install.packages("caret", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+## e1071 ----
+if (require("e1071")) {
+  require("e1071")
+} else {
+  install.packages("e1071", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+## factoextra ----
+if (require("factoextra")) {
+  require("factoextra")
+} else {
+  install.packages("factoextra", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+## FactoMineR ----
+if (require("FactoMineR")) {
+  require("FactoMineR")
+} else {
+  install.packages("FactoMineR", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+```
+
+------------------------------------------------------------------------
+
+**Note:** the following "*KnitR*" options have been set as the defaults in this markdown:\
+`knitr::opts_chunk$set(echo = TRUE, warning = FALSE, eval = TRUE, collapse = FALSE, tidy.opts = list(width.cutoff = 80), tidy = TRUE)`.
+
+More KnitR options are documented here <https://bookdown.org/yihui/rmarkdown-cookbook/chunk-options.html> and here <https://yihui.org/knitr/options/>.
+
+```{r setup, echo=TRUE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+	eval = TRUE,
+	echo = TRUE,
+	warning = FALSE,
+	collapse = FALSE,
+	tidy = TRUE
+)
+```
+
+------------------------------------------------------------------------
+
+**Note:** the following "*R Markdown*" options have been set as the defaults in this markdown:
+
+> output:\
+> \
+> github_document:\
+> toc: yes\
+> toc_depth: 4\
+> fig_width: 6\
+> fig_height: 4\
+> df_print: default\
+> \
+> editor_options:\
+> chunk_output_type: console
+
+# Loading the Student Performance Dataset
+
+The 20230412-20230719-BI1-BBIT4-1-StudentPerformanceDataset is then loaded. The dataset and its metadata are available here: <https://drive.google.com/drive/folders/1-BGEhfOwquXF6KKXwcvrx7WuZXuqmW9q?usp=sharing>
+
+```{r Load Dataset}
+student_performance_dataset <-
+  readr::read_csv(
+                  "/Users/Cris/github-classroom/BBT4206-R-Lab4of15-DataTransforms-team-kubwa/data/20230412-20230719-BI1-BBIT4-1-StudentPerformanceDataset - dataset.csv", 
+                  col_types =
+                  readr::cols(
+                              class_group =
+                              readr::col_factor(levels = c("A", "B", "C")),
+                              gender = readr::col_factor(levels = c("1", "0")),
+                              YOB = readr::col_date(format = "%Y"),
+                              regret_choosing_bi =
+                              readr::col_factor(levels = c("1", "0")),
+                              drop_bi_now =
+                              readr::col_factor(levels = c("1", "0")),
+                              motivator =
+                              readr::col_factor(levels = c("1", "0")),
+                              read_content_before_lecture =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4", "5")),
+                              anticipate_test_questions =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4", "5")),
+                              answer_rhetorical_questions =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4", "5")),
+                              find_terms_I_do_not_know =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4", "5")),
+                              copy_new_terms_in_reading_notebook =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4", "5")),
+                              take_quizzes_and_use_results =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4", "5")),
+                              reorganise_course_outline =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4", "5")),
+                              write_down_important_points =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4", "5")),
+                              space_out_revision =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4", "5")),
+                              studying_in_study_group =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4", "5")),
+                              schedule_appointments =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4", "5")),
+                              goal_oriented =
+                              readr::col_factor(levels =
+                                                c("1", "0")),
+                              spaced_repetition =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4")),
+                              testing_and_active_recall =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4")),
+                              interleaving =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4")),
+                              categorizing =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4")),
+                              retrospective_timetable =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4")),
+                              cornell_notes =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4")),
+                              sq3r = readr::col_factor(levels =
+                                                       c("1", "2", "3", "4")),
+                              commute = readr::col_factor(levels =
+                                                          c("1", "2",
+                                                            "3", "4")),
+                              study_time = readr::col_factor(levels =
+                                                             c("1", "2",
+                                                               "3", "4")),
+                              repeats_since_Y1 = readr::col_integer(),
+                              paid_tuition = readr::col_factor(levels =
+                                                               c("0", "1")),
+                              free_tuition = readr::col_factor(levels =
+                                                               c("0", "1")),
+                              extra_curricular = readr::col_factor(levels =
+                                                                   c("0", "1")),
+                              sports_extra_curricular =
+                              readr::col_factor(levels = c("0", "1")),
+                              exercise_per_week = readr::col_factor(levels =
+                                                                    c("0", "1",
+                                                                      "2",
+                                                                      "3")),
+                              meditate = readr::col_factor(levels =
+                                                           c("0", "1",
+                                                             "2", "3")),
+                              pray = readr::col_factor(levels =
+                                                       c("0", "1",
+                                                         "2", "3")),
+                              internet = readr::col_factor(levels =
+                                                           c("0", "1")),
+                              laptop = readr::col_factor(levels = c("0", "1")),
+                              family_relationships =
+                              readr::col_factor(levels =
+                                                c("1", "2", "3", "4", "5")),
+                              friendships = readr::col_factor(levels =
+                                                              c("1", "2", "3",
+                                                                "4", "5")),
+                              romantic_relationships =
+                              readr::col_factor(levels =
+                                                c("0", "1", "2", "3", "4")),
+                              spiritual_wellnes =
+                              readr::col_factor(levels = c("1", "2", "3",
+                                                           "4", "5")),
+                              financial_wellness =
+                              readr::col_factor(levels = c("1", "2", "3",
+                                                           "4", "5")),
+                              health = readr::col_factor(levels = c("1", "2",
+                                                                    "3", "4",
+                                                                    "5")),
+                              day_out = readr::col_factor(levels = c("0", "1",
+                                                                     "2", "3")),
+                              night_out = readr::col_factor(levels = c("0",
+                                                                       "1", "2",
+                                                                       "3")),
+                              alcohol_or_narcotics =
+                              readr::col_factor(levels = c("0", "1", "2", "3")),
+                              mentor = readr::col_factor(levels = c("0", "1")),
+                              mentor_meetings = readr::col_factor(levels =
+                                                                  c("0", "1",
+                                                                    "2", "3")),
+                              `Attendance Waiver Granted: 1 = Yes, 0 = No` =
+                              readr::col_factor(levels = c("0", "1")),
+                              GRADE = readr::col_factor(levels =
+                                                        c("A", "B", "C", "D",
+                                                          "E"))),
+                  locale = readr::locale())
+```
+
+## Description of the Dataset
+
+We then display the number of observations and number of variables. We have 101 observations and 100 variables to work with.
+
+```{r Your Fourth Code Chunk}
+dim(student_performance_dataset)
+```
+
+Next, we display the quartiles for each numeric variable[*... think of this process as **"storytelling using the data."** Tell us what is happening; tell us what you are discovering as you proceed with the markdown; walk us through your code step-by-step (a code walkthrough).*]{#highlight style="color: blue"}
+
+```{r Your Fifth Code Chunk}
+summary(student_performance_dataset)
+```
+
+# \<Scale Data Transform\>
+
+The scale data transform is useful for scaling data that has a Gaussian distribution. The scale data transform works by calculating the standard deviation of an attribute and then divides each value by the standard deviation.
+
+```{r Your Sixth Code Chunk}
+# Fill this with R related code that will be executed when the R markdown file
+# BEFORE
+class(student_performance_dataset)
+summary(student_performance_dataset)
+colnames(student_performance_dataset)
+student_performance_dataset<- as.data.frame(student_performance_dataset)
+
+hist(student_performance_dataset[, 75], main = names(student_performance_dataset)[75])
+hist(student_performance_dataset[, 76], main = names(student_performance_dataset)[76])
+hist(student_performance_dataset[, 77], main = names(student_performance_dataset)[77])
+hist(student_performance_dataset[, 78], main = names(student_performance_dataset)[78])
+hist(student_performance_dataset[, 79], main = names(student_performance_dataset)[79])
+hist(student_performance_dataset[, 80], main = names(student_performance_dataset)[80])
+hist(student_performance_dataset[, 81], main = names(student_performance_dataset)[81])
+hist(student_performance_dataset[, 82], main = names(student_performance_dataset)[82])
+hist(student_performance_dataset[, 83], main = names(student_performance_dataset)[83])
+hist(student_performance_dataset[, 84], main = names(student_performance_dataset)[84])
+hist(student_performance_dataset[, 85], main = names(student_performance_dataset)[85])
+hist(student_performance_dataset[, 86], main = names(student_performance_dataset)[86])
+hist(student_performance_dataset[, 87], main = names(student_performance_dataset)[87])
+
+model_of_the_transform <- preProcess(student_performance_dataset, method = c("scale"))
+print(model_of_the_transform)
+student_performance_dataset_scale_transform <- predict(model_of_the_transform,
+                                                       student_performance_dataset)
+
+# AFTER comment
+summary(student_performance_dataset_scale_transform)
+hist(student_performance_dataset_scale_transform[, 75],
+     main = names(student_performance_dataset_scale_transform)[75])
+hist(student_performance_dataset_scale_transform[, 76],
+     main = names(student_performance_dataset_scale_transform)[76])
+hist(student_performance_dataset_scale_transform[, 77],
+     main = names(student_performance_dataset_scale_transform)[77])
+hist(student_performance_dataset_scale_transform[, 78],
+     main = names(student_performance_dataset_scale_transform)[78])
+hist(student_performance_dataset_scale_transform[, 79],
+     main = names(student_performance_dataset_scale_transform)[79])
+hist(student_performance_dataset_scale_transform[, 80],
+     main = names(student_performance_dataset_scale_transform)[80])
+hist(student_performance_dataset_scale_transform[, 81],
+     main = names(student_performance_dataset_scale_transform)[81])
+hist(student_performance_dataset_scale_transform[, 82],
+     main = names(student_performance_dataset_scale_transform)[82])
+hist(student_performance_dataset_scale_transform[, 83],
+     main = names(student_performance_dataset_scale_transform)[83])
+hist(student_performance_dataset_scale_transform[, 84],
+     main = names(student_performance_dataset_scale_transform)[84])
+hist(student_performance_dataset_scale_transform[, 85],
+     main = names(student_performance_dataset_scale_transform)[85])
+hist(student_performance_dataset_scale_transform[, 86],
+     main = names(student_performance_dataset_scale_transform)[86])
+hist(student_performance_dataset_scale_transform[, 87],
+     main = names(student_performance_dataset_scale_transform)[87])
+
+# BEFORE
+summary(student_performance_dataset)
+# The code below converts column number 99 into unlisted and numeric data first
+# so that a histogram can be plotted. Further reading:
+student_performance_dataset_yield <- as.numeric(unlist(student_performance_dataset[, 99]))
+hist(student_performance_dataset_yield, main = names(student_performance_dataset_yield)[99])
+
+model_of_the_transform <- preProcess(student_performance_dataset, method = c("scale"))
+print(model_of_the_transform)
+student_performance_data_scale_transform <- predict(model_of_the_transform, student_performance_dataset)
+
+# AFTER
+summary(student_performance_data_scale_transform)
+student_performance_dataset_yield <- as.numeric(unlist(student_performance_data_scale_transform[, 99]))
+hist(student_performance_dataset_yield, main = names(student_performance_data_scale_transform)[99])
+```
+
+## \<Center Data Transform\>
+
+```{r Your Seventh Code Chunk}
+#The centre data transform calculates the mean of an attribute and subtracts it from each value.
+
+# BEFORE
+summary(student_performance_dataset)
+boxplot(student_performance_dataset[, 75], main = names(student_performance_dataset)[75])
+boxplot(student_performance_dataset[, 76], main = names(student_performance_dataset)[76])
+boxplot(student_performance_dataset[, 77], main = names(student_performance_dataset)[77])
+boxplot(student_performance_dataset[, 78], main = names(student_performance_dataset)[78])
+boxplot(student_performance_dataset[, 79], main = names(student_performance_dataset)[79])
+boxplot(student_performance_dataset[, 80], main = names(student_performance_dataset)[80])
+boxplot(student_performance_dataset[, 81], main = names(student_performance_dataset)[81])
+boxplot(student_performance_dataset[, 82], main = names(student_performance_dataset)[82])
+boxplot(student_performance_dataset[, 83], main = names(student_performance_dataset)[83])
+boxplot(student_performance_dataset[, 84], main = names(student_performance_dataset)[84])
+boxplot(student_performance_dataset[, 85], main = names(student_performance_dataset)[85])
+boxplot(student_performance_dataset[, 86], main = names(student_performance_dataset)[86])
+boxplot(student_performance_dataset[, 87], main = names(student_performance_dataset)[87])
+
+model_of_the_transform <- preProcess(student_performance_dataset, method = c("center"))
+print(model_of_the_transform)
+student_performance_dataset_center_transform <- predict(model_of_the_transform, 
+                                                        student_performance_dataset)
+
+# AFTER
+summary(student_performance_dataset_center_transform)
+boxplot(student_performance_dataset_center_transform[, 75],
+        main = names(student_performance_dataset_center_transform)[75])
+boxplot(student_performance_dataset_center_transform[, 76],
+        main = names(student_performance_dataset_center_transform)[76])
+boxplot(student_performance_dataset_center_transform[, 77],
+        main = names(student_performance_dataset_center_transform)[77])
+boxplot(student_performance_dataset_center_transform[, 78],
+        main = names(student_performance_dataset_center_transform)[78])
+boxplot(student_performance_dataset_center_transform[, 79],
+        main = names(student_performance_dataset_center_transform)[79])
+boxplot(student_performance_dataset_center_transform[, 80],
+        main = names(student_performance_dataset_center_transform)[80])
+boxplot(student_performance_dataset_center_transform[, 81],
+        main = names(student_performance_dataset_center_transform)[81])
+boxplot(student_performance_dataset_center_transform[, 82],
+        main = names(student_performance_dataset_center_transform)[82])
+boxplot(student_performance_dataset_center_transform[, 83],
+        main = names(student_performance_dataset_center_transform)[83])
+boxplot(student_performance_dataset_center_transform[, 84],
+        main = names(student_performance_dataset_center_transform)[84])
+boxplot(student_performance_dataset_center_transform[, 85],
+        main = names(student_performance_dataset_center_transform)[85])
+boxplot(student_performance_dataset_center_transform[, 86],
+        main = names(student_performance_dataset_center_transform)[86])
+boxplot(student_performance_dataset_center_transform[, 87],
+        main = names(student_performance_dataset_center_transform)[87])
+
+### The Centre Basic Transform on the Crop Dataset ----
+summary(student_performance_dataset)
+model_of_the_transform <- preProcess(student_performance_dataset, method = c("center"))
+print(model_of_the_transform)
+student_performance_dataset_center_transform <- predict(model_of_the_transform, student_performance_dataset)
+summary(student_performance_dataset_center_transform)
+```
+
+## \<Standardize Data Transform\>
+The standardize data transform ensures that each numeric attribute has a mean value of 0 and a standard deviation of 1. This is done by combining the scale data transform and the centre data transform.
+```{r Your Eighth Code Chunk}
+# BEFORE
+summary(student_performance_dataset)
+sapply(student_performance_dataset[, 96:99], sd)
+
+model_of_the_transform <- preProcess(student_performance_dataset,
+                                     method = c("scale", "center"))
+print(model_of_the_transform)
+student_performance_dataset_standardize_transform <- predict(model_of_the_transform, 
+                                                             student_performance_dataset)
+
+# AFTER
+summary(student_performance_dataset_standardize_transform)
+sapply(student_performance_dataset_standardize_transform[, 96:99], sd)
+
+
+```
+
+## \<Normalize Data Transform\>
+Normalizing a dataset implies ensuring the numerical data are between [0, 1] (inclusive).
+
+```{r Your Ninth Code Chunk}
+### The Normalize Transform on the Boston Housing Dataset ----
+summary(student_performance_dataset)
+model_of_the_transform <- preProcess(student_performance_dataset, method = c("range"))
+print(model_of_the_transform)
+student_performance_dataset_normalize_transform <- predict(model_of_the_transform, 
+                                                           student_performance_dataset)
+summary(student_performance_dataset_normalize_transform)
+
+
+```
+
+## \<Box-Cox Power Transform\>
+The skewness informs you of the asymmetry of the distribution of results.
+Similar to kurtosis, there are several ways of computing the skewness. Using
+“type = 2” (discussed in a previous Lab) can be interpreted as:
+ 1.	Skewness between -0.4 and 0.4 (inclusive) implies that there is no
+      skew in the distribution of results; the distribution of results is
+      symmetrical; it is a normal distribution.
+ 2. Skewness above 0.4 implies a positive skew; a right-skewed distribution.
+ 3.	Skewness below -0.4 implies a negative skew; a left-skewed distribution.
+
+```{r Your Tenth Code Chunk}
+# BEFORE
+summary(student_performance_dataset_normalize_transform)
+
+#Calculate the skewness before the Box-Cox transform
+sapply(student_performance_dataset_normalize_transform[, 96:99],  skewness, type = 2)
+
+#Plot a histogram to view the skewness before the Box-Cox transform
+hist(student_performance_dataset[, 75], main = names(student_performance_dataset)[75])
+hist(student_performance_dataset[, 76], main = names(student_performance_dataset)[76])
+hist(student_performance_dataset[, 77], main = names(student_performance_dataset)[77])
+hist(student_performance_dataset[, 78], main = names(student_performance_dataset)[78])
+hist(student_performance_dataset[, 79], main = names(student_performance_dataset)[79])
+hist(student_performance_dataset[, 80], main = names(student_performance_dataset)[80])
+hist(student_performance_dataset[, 81], main = names(student_performance_dataset)[81])
+hist(student_performance_dataset[, 82], main = names(student_performance_dataset)[82])
+hist(student_performance_dataset[, 83], main = names(student_performance_dataset)[83])
+hist(student_performance_dataset[, 84], main = names(student_performance_dataset)[84])
+hist(student_performance_dataset[, 85], main = names(student_performance_dataset)[85])
+hist(student_performance_dataset[, 86], main = names(student_performance_dataset)[86])
+hist(student_performance_dataset[, 87], main = names(student_performance_dataset)[87])
+
+model_of_the_transform <- preProcess(student_performance_dataset, method = c("BoxCox"))
+print(model_of_the_transform)
+student_performance_dataset_box_cox_transform <- predict(model_of_the_transform, 
+                                                         student_performance_dataset)
+
+# AFTER
+summary(student_performance_dataset_box_cox_transform)
+
+# Calculate the skewness after the Box-Cox transform
+sapply(student_performance_dataset_box_cox_transform[, 96:99],  skewness, type = 2)
+
+#Plot a histogram to view the skewness after the Box-Cox transform
+hist(student_performance_dataset_box_cox_transform[, 75],
+     main = names(student_performance_dataset_box_cox_transform)[75])
+hist(student_performance_dataset_box_cox_transform[, 76],
+     main = names(student_performance_dataset_box_cox_transform)[76])
+hist(student_performance_dataset_box_cox_transform[, 77],
+     main = names(student_performance_dataset_box_cox_transform)[77])
+hist(student_performance_dataset_box_cox_transform[, 78],
+     main = names(student_performance_dataset_box_cox_transform)[78])
+hist(student_performance_dataset_box_cox_transform[, 79],
+     main = names(student_performance_dataset_box_cox_transform)[79])
+hist(student_performance_dataset_box_cox_transform[, 80],
+     main = names(student_performance_dataset_box_cox_transform)[80])
+hist(student_performance_dataset_box_cox_transform[, 81],
+     main = names(student_performance_dataset_box_cox_transform)[81])
+hist(student_performance_dataset_box_cox_transform[, 82],
+     main = names(student_performance_dataset_box_cox_transform)[82])
+hist(student_performance_dataset_box_cox_transform[, 83],
+     main = names(student_performance_dataset_box_cox_transform)[83])
+hist(student_performance_dataset_box_cox_transform[, 84],
+     main = names(student_performance_dataset_box_cox_transform)[84])
+hist(student_performance_dataset_box_cox_transform[, 85],
+     main = names(student_performance_dataset_box_cox_transform)[85])
+hist(student_performance_dataset_box_cox_transform[, 86],
+     main = names(student_performance_dataset_box_cox_transform)[86])
+hist(student_performance_dataset_box_cox_transform[, 87],
+     main = names(student_performance_dataset_box_cox_transform)[87])
+
+```
+## \<Yeo-Johnson Power Transform\>
+Similar to the Box-Cox transform, the Yeo-Johnson transform reduces the skewness by shifting the distribution of an attribute and making the attribute have a more Gaussian-like distribution. The difference is that the Yeo-Johnson transform can handle zero and negative values, unlike the Box-Cox transform.
+
+```{r Your Eleventh Code Chunk}
+# BEFORE
+summary(student_performance_dataset)
+
+# Calculate the skewness before the Yeo-Johnson transform
+sapply(student_performance_dataset[, 96:99],  skewness, type = 2)
+
+# Plot a histogram to view the skewness before the Box-Cox transform
+hist(student_performance_dataset[, 75], main = names(student_performance_dataset)[75])
+hist(student_performance_dataset[, 76], main = names(student_performance_dataset)[76])
+hist(student_performance_dataset[, 77], main = names(student_performance_dataset)[77])
+hist(student_performance_dataset[, 78], main = names(student_performance_dataset)[78])
+hist(student_performance_dataset[, 79], main = names(student_performance_dataset)[79])
+hist(student_performance_dataset[, 80], main = names(student_performance_dataset)[80])
+hist(student_performance_dataset[, 81], main = names(student_performance_dataset)[81])
+hist(student_performance_dataset[, 82], main = names(student_performance_dataset)[82])
+hist(student_performance_dataset[, 83], main = names(student_performance_dataset)[83])
+hist(student_performance_dataset[, 84], main = names(student_performance_dataset)[84])
+hist(student_performance_dataset[, 85], main = names(student_performance_dataset)[85])
+hist(student_performance_dataset[, 86], main = names(student_performance_dataset)[86])
+hist(student_performance_dataset[, 87], main = names(student_performance_dataset)[87])
+
+model_of_the_transform <- preProcess(student_performance_dataset, method = c("YeoJohnson"))
+print(model_of_the_transform)
+student_performance_dataset_yeo_johnson_transform <- predict(model_of_the_transform, 
+                                                             student_performance_dataset)
+
+# AFTER
+summary(student_performance_dataset_yeo_johnson_transform)
+
+# Calculate the skewness after the Yeo-Johnson transform
+sapply(student_performance_dataset_yeo_johnson_transform[, 96:99],  skewness, type = 2)
+
+# Plot a histogram to view the skewness after the Box-Cox transform
+hist(student_performance_dataset_box_cox_transform[, 75],
+     main = names(student_performance_dataset_box_cox_transform)[75])
+hist(student_performance_dataset_box_cox_transform[, 76],
+     main = names(student_performance_dataset_box_cox_transform)[76])
+hist(student_performance_dataset_box_cox_transform[, 77],
+     main = names(student_performance_dataset_box_cox_transform)[77])
+hist(student_performance_dataset_box_cox_transform[, 78],
+     main = names(student_performance_dataset_box_cox_transform)[78])
+hist(student_performance_dataset_box_cox_transform[, 79],
+     main = names(student_performance_dataset_box_cox_transform)[79])
+hist(student_performance_dataset_box_cox_transform[, 80],
+     main = names(student_performance_dataset_box_cox_transform)[80])
+hist(student_performance_dataset_box_cox_transform[, 81],
+     main = names(student_performance_dataset_box_cox_transform)[81])
+hist(student_performance_dataset_box_cox_transform[, 82],
+     main = names(student_performance_dataset_box_cox_transform)[82])
+hist(student_performance_dataset_box_cox_transform[, 83],
+     main = names(student_performance_dataset_box_cox_transform)[83])
+hist(student_performance_dataset_box_cox_transform[, 84],
+     main = names(student_performance_dataset_box_cox_transform)[84])
+hist(student_performance_dataset_box_cox_transform[, 85],
+     main = names(student_performance_dataset_box_cox_transform)[85])
+hist(student_performance_dataset_box_cox_transform[, 86],
+     main = names(student_performance_dataset_box_cox_transform)[86])
+hist(student_performance_dataset_box_cox_transform[, 87],
+     main = names(student_performance_dataset_box_cox_transform)[87])
+
+```
+
+## \<Principal Component Analysis (PCA) Linear Algebra Transform\>
+PCA and ICA are primarily dimensionality reduction techniques used to transform high-dimensional data into a lower-dimensional space while retaining as much variance as possible. However, they can indirectly assist in feature selection by identifying the most important features or components.
+
+```{r Your Twelfth Code Chunk}
+summary(student_performance_dataset)
+
+model_of_the_transform <- preProcess(student_performance_dataset, method =
+                                       c("scale", "center", "pca"))
+
+print(model_of_the_transform)
+student_performance_dataset_pca_dr <- predict(model_of_the_transform, student_performance_dataset)
+
+summary(student_performance_dataset_pca_dr)
+
+
+```
+
+## \<PCA Linear Algebra Transform for Feature Extraction\>
+We use the `princomp()` function is used to perform PCA on a correlation matrix.
+
+```{r Your Thirteenth Code Chunk}
+str(student_performance_dataset)
+summary(student_performance_dataset)
+
+student_performance_dataset_pca_fe <- princomp(cor(student_performance_dataset[, 96:97]))
+summary(student_performance_dataset_pca_fe)
+
+#### Scree Plot ----
+# The Scree Plot shows that the 1st 2 principal components can cumulatively
+# explain 92.8% of the variance, i.e., 87.7% + 5.1% = 92.8%.
+factoextra::fviz_eig(student_performance_dataset_pca_fe, addlabels = TRUE)
+
+#### Loading Values ----
+# Remember: Principal components are new features created in the process of
+#           dimensionality reduction. We would like to know the extent to which
+#           each feature is represented in the 1st 2 principal components. We
+#           can use "loading values" to determine the extent of representation.
+
+# The loading values for each variable in the 1st 2 principal components are
+# shown below:
+student_performance_dataset_pca_fe$loadings[, 1:2]
+
+# This is easier to understand using a visualization that shows the extent to
+# which each variable is represented in a given component.
+
+# In this case, it shows the extent to which each variable is represented in
+# the first 2 components.
+
+
+# Points to note when interpreting the visualization:
+# The Cos2 value is the square cosine. It corresponds to the quality of
+# representation.
+#    (i) A low value means that the variable is not perfectly represented by
+#         that component.
+#    (ii) A high value, on the other hand, means a good representation of the
+#         variable on that component.
+
+factoextra::fviz_cos2(student_performance_dataset_pca_fe, choice = "var", axes = 1:2)
+
+# The 8 most represented variables in the first 2 components (which we said
+# represent 92.8% of the variation) are, in descending order: indus, nox,
+# lstat, dis, tax, age, medv, rad
+
+#### Biplot and Cos2 Combined Plot ----
+# This can be confirmed using the following visualization.
+
+# Points to note when interpreting the visualization:
+#    (i) All the variables that are grouped together are positively correlated.
+#    (ii) The longer the arrow, the better represented the variable is.
+#    (iii) Variables that are negatively correlated are displayed in the
+#          opposite side of the origin.
+
+factoextra::fviz_pca_var(student_performance_dataset_pca_fe, col.var = "cos2",
+                         gradient.cols = c("red", "orange", "green"),
+                         repel = TRUE)
+
+```
+
+## \<ICA Linear Algebra Transform for Dimensionality Reduction\>
+Independent Component Analysis (ICA) transforms the data to return only the independent components. The n.comp argument is required to specify the desired number of independent components. This also results in a list of attributes that are uncorrelated.
+
+
+```{r Your Fourteenth Code Chunk}
+if (!is.element("fastICA", installed.packages()[, 1])) {
+  install.packages("fastICA", dependencies = TRUE)
+}
+require("fastICA")
+
+### ICA for Dimensionality Reduction on the Boston Housing Dataset ----
+summary(student_performance_dataset)
+
+model_of_the_transform <- preProcess(student_performance_dataset,
+                                     method = c("scale", "center", "ica"),
+                                     n.comp = 8)
+print(model_of_the_transform)
+student_performance_dataset_ica_dr <- predict(model_of_the_transform, student_performance_dataset)
+
+summary(student_performance_dataset_ica_dr)
+
+```
+
+**etc.** as per the lab submission requirements. Be neat and communicate in a clear and logical manner.
